@@ -2,6 +2,7 @@
 """
 
 import os
+os.environ["TORCH_CUDA_ARCH_LIST"] = '9.0'
 from loguru import logger
 from pytorch_lightning.cli import LightningCLI
 
@@ -17,7 +18,7 @@ class CLI(LightningCLI):
 
 def main() -> None:
     logger.info(f"PID: {os.getpid()}")
-    cli = CLI(PremiseRetriever, RetrievalDataModule)
+    cli = CLI(PremiseRetriever, RetrievalDataModule, save_config_kwargs={"overwrite": True})
     logger.info("Configuration: \n", cli.config)
 
 

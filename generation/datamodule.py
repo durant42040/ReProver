@@ -97,7 +97,7 @@ class GeneratorDataset(Dataset):
             return_tensors="pt",
         )
         tactic_ids = tokenized_tactic.input_ids
-        tactic_ids[tactic_ids == self.tokenizer.pad_token_id] = -100
+        #tactic_ids[tactic_ids == self.tokenizer.pad_token_id] = -100
 
         batch = {}
         batch["state"] = state

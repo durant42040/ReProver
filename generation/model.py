@@ -8,7 +8,7 @@ from loguru import logger
 import pytorch_lightning as pl
 from torchmetrics import Metric
 from typing import List, Dict, Any, Optional
-from transformers import T5ForConditionalGeneration, AutoTokenizer
+from transformers import T5ForConditionalGeneration, AutoTokenizer, AutoModelForCausalLM
 
 from common import (
     remove_marks,
@@ -79,12 +79,13 @@ class RetrievalAugmentedGenerator(pl.LightningModule):
             self.retriever = None
         else:
             logger.info(f"Loading the retriever from {ret_ckpt_path}")
-            self.retriever = PremiseRetriever.load(
-                ret_ckpt_path, self.device, freeze=True
+            self.retriever = PremiseRetriever.load_hf(
+                ret_ckpt_path, 2048, self.device
             )
+            self.retriever.freeze()
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.generator = T5ForConditionalGeneration.from_pretrained(model_name)
+        self.generator = AutoModelForCausalLM.from_pretrained(model_name)
 
         self.topk_accuracies = dict()
         for k in range(1, num_beams + 1):
@@ -104,10 +105,24 @@ class RetrievalAugmentedGenerator(pl.LightningModule):
         state_mask: torch.Tensor,
         tactic_ids: torch.Tensor,
     ) -> torch.Tensor:
+        input_ids = torch.cat([state_ids, tactic_ids], dim=1)
+        attention_mask = torch.cat([state_mask, torch.ones_like(tactic_ids)], dim=1)
+        
+        tactic_labels = tactic_ids.clone()
+        tactic_labels[tactic_labels == self.tokenizer.pad_token_id] = -100
+        
+        labels = torch.cat([
+            torch.full_like(state_ids, fill_value=-100),  
+            tactic_labels  
+        ], dim=1)
+        print("input_ids", input_ids.shape)
+        print("attention_mask", attention_mask.shape)
+        print("labels", labels.shape)
+        
         return self.generator(
-            input_ids=state_ids,
-            attention_mask=state_mask,
-            labels=tactic_ids,
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            labels=labels,
         ).loss
 
     ############
@@ -260,3 +275,4 @@ class RetrievalAugmentedGenerator(pl.LightningModule):
                     shutil.rmtree(path)
                 else:
                     os.remove(path)
+

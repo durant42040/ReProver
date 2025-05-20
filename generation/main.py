@@ -17,7 +17,7 @@ class CLI(LightningCLI):
 
 def main() -> None:
     logger.info(f"PID: {os.getpid()}")
-    cli = CLI(RetrievalAugmentedGenerator, GeneratorDataModule)
+    cli = CLI(RetrievalAugmentedGenerator, GeneratorDataModule, save_config_kwargs={"overwrite": True})
     print("Configuration: \n", cli.config)
 
 
