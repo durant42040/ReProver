@@ -35,7 +35,7 @@ trainer:
         verbose: true
 
 model:
-  model_name: deepseek-ai/DeepSeek-Prover-V2-7B
+  model_name: google/byt5-small
   lr: 1e-4
   warmup_steps: 2000
   num_retrieved: 100

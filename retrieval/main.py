@@ -2,7 +2,6 @@
 """
 
 import os
-os.environ["TORCH_CUDA_ARCH_LIST"] = '9.0'
 from loguru import logger
 from pytorch_lightning.cli import LightningCLI
 
